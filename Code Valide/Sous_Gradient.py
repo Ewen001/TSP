@@ -18,9 +18,9 @@ matrice_distances = np.array([
 
 n = len(Liste_ville)  # Nombre de villes
 
-np.random.seed(0)  # Permet de fixer la même séquence de nombres aléatoires pour chaque essais
-Val_Lambda = np.random.uniform(-1, 1, size=n)  # Initialisation aléatoire des multiplicateurs entre -1 et 1 
-taille_pas = 1.0 # Pas initial pour améliorer petit à petit les multiplicateurs
+np.random.seed(0)                                 # Permet de fixer la même séquence de nombres aléatoires pour chaque essais
+Val_Lambda = np.random.uniform(-1, 1, size=n)     # Initialisation aléatoire des multiplicateurs entre -1 et 1 
+taille_pas = 1.0                                  # Pas initial pour améliorer petit à petit les multiplicateurs
 max_Iteration = 50 
 
 # Fonction de relaxation lagrangienne
@@ -30,12 +30,12 @@ def RelaxationLagrangien(matrice_distances, multiplicateurs):
 
     # On parcourt toutes les permutations possible parmis les 6 villes
     for perm in permutations(range(1, n)):
-        chemin = [0] + list(perm) + [0]  # On part de la ville 0, on visite les villes dans l'ordre donné par perm, en revenant à la ville 0
-        cout = sum(matrice_distances[chemin[i], chemin[i+1]] for i in range(n))  # Coût réel du trajet
+        chemin = [0] + list(perm) + [0]                                            # On part de la ville 0, on visite les villes dans l'ordre donné par perm, en revenant à la ville 0
+        cout = sum(matrice_distances[chemin[i], chemin[i+1]] for i in range(n))    # Coût réel du trajet
 
         # Pénalité liée aux violations de la contrainte "visiter une ville une seule fois"
-        penalite = sum(multiplicateurs[i] * (chemin.count(i) - 1) for i in range(n)) # Somme du multiplicateur de Lagrange multiplié par le nombre de foix que la ville i a été visité en trop
-        cout_lagrangien = cout + penalite # Coût réel 
+        penalite = sum(multiplicateurs[i] * (chemin.count(i) - 1) for i in range(n))    # Somme du multiplicateur de Lagrange multiplié par le nombre de foix que la ville i a été visité en trop
+        cout_lagrangien = cout + penalite                                               # Coût réel 
 
         if cout_lagrangien < meilleur_cout: # On prend la meilleur solution 
             meilleur_cout = cout_lagrangien
@@ -61,8 +61,8 @@ for iteration_Actuelle in range(max_Iteration):
         break
 
     # Mise à jour des multiplicateurs de Lagrange 
-    pas = taille_pas / (iteration_Actuelle + 1)  # Pas décroissant avec le nombre d'itérationspour précision
-    Val_Lambda = Val_Lambda + pas * sous_gradient # Nouveau lambda, on avance dans la direction du sous gradient multplié par la taille du pas
+    pas = taille_pas / (iteration_Actuelle + 1)              # Pas décroissant avec le nombre d'itérationspour précision
+    Val_Lambda = Val_Lambda + pas * sous_gradient            # Nouveau lambda, on avance dans la direction du sous gradient multplié par la taille du pas
 
 # Affichage du résultat final
 chemin_final = [Liste_ville[i] for i in chemin_courant]
