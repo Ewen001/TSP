@@ -1,75 +1,70 @@
 import numpy as np
-from itertools import permutations
+from itertools import permutations # Fonction de itertools qui permet de générer toutes les permutations possibles 
 
-# Liste des villes (doit correspondre à l’ordre de la matrice)
-city_list = ["Paris", "Lille", "Strasbourg", "Lyon", "Marseille", "Toulouse"]
+# Liste des villes de notre exemple 
+Liste_ville = ["Paris", "Lille", "Strasbourg", "Lyon", "Marseille", "Toulouse"]
 
 # Matrice des distances entre les villes (symétrique, en km)
-distance_matrix = np.array([
-    [0, 203.6, 398.5, 391.7, 660.5, 588.0],
-    [203.6, 0, 409.1, 556.9, 833.8, 790.4],
-    [398.5, 409.1, 0, 382.6, 614.9, 736.4],
-    [391.7, 556.9, 382.6, 0, 277.5, 360.3],
-    [660.5, 833.8, 614.9, 277.5, 0, 319.6],
-    [588.0, 790.4, 736.4, 360.3, 319.6, 0]
+matrice_distances = np.array([
+    [0, 203.6, 398.5, 391.7, 660.5, 588.0],     # Paris
+    [203.6, 0, 409.1, 556.9, 833.8, 790.4],     # Lille
+    [398.5, 409.1, 0, 382.6, 614.9, 736.4],     # Strasbourg
+    [391.7, 556.9, 382.6, 0, 277.5, 360.3],     # Lyon
+    [660.5, 833.8, 614.9, 277.5, 0, 319.6],     # Marseille
+    [588.0, 790.4, 736.4, 360.3, 319.6, 0]      # Toulouse
 ])
 
-n = len(city_list)  # Nombre de villes
+n = len(Liste_ville)  # Nombre de villes
 
-np.random.seed(0)  # Pour reproductibilité
-lambda_vals = np.random.uniform(-1, 1, size=n)  # Initialisation aléatoire des multiplicateurs
-alpha = 1.0       # Pas initial
-max_iter = 50     # Nombre maximal d’itérations
+np.random.seed(0)  # Permet de fixer la même séquence de nombres aléatoires pour chaque essais
+Val_Lambda = np.random.uniform(-1, 1, size=n)  # Initialisation aléatoire des multiplicateurs entre -1 et 1 
+taille_pas = 1.0 # Pas initial pour améliorer petit à petit les multiplicateurs
+max_Iteration = 50 
 
-# Fonction lagrangienne
+# Fonction de relaxation lagrangienne
+def RelaxationLagrangien(matrice_distances, multiplicateurs):
+    meilleur_cout = float('inf')
+    meilleur_chemin = None
 
-def lagrangian_relaxation(matrix, lambdas):
-    """
-    Évalue tous les chemins possibles et renvoie celui avec le plus faible coût lagrangien :
-    coût réel + pénalités en fonction des violations de visites.
-    """
-    best_cost = float('inf')
-    best_path = None
-
+    # On parcourt toutes les permutations possible parmis les 6 villes
     for perm in permutations(range(1, n)):
-        path = [0] + list(perm) + [0]  # Circuit complet
-        cost = sum(matrix[path[i], path[i+1]] for i in range(n))  # Coût réel
+        chemin = [0] + list(perm) + [0]  # On part de la ville 0, on visite les villes dans l'ordre donné par perm, en revenant à la ville 0
+        cout = sum(matrice_distances[chemin[i], chemin[i+1]] for i in range(n))  # Coût réel du trajet
 
-        # Pénalité pour chaque ville si elle est visitée plus d’une fois
-        penalty = sum(lambdas[i] * (path.count(i) - 1) for i in range(n))
-        lagrangian_cost = cost + penalty
+        # Pénalité liée aux violations de la contrainte "visiter une ville une seule fois"
+        penalite = sum(multiplicateurs[i] * (chemin.count(i) - 1) for i in range(n)) # Somme du multiplicateur de Lagrange multiplié par le nombre de foix que la ville i a été visité en trop
+        cout_lagrangien = cout + penalite # Coût réel 
 
-        if lagrangian_cost < best_cost:
-            best_cost = lagrangian_cost
-            best_path = path
+        if cout_lagrangien < meilleur_cout: # On prend la meilleur solution 
+            meilleur_cout = cout_lagrangien
+            meilleur_chemin = chemin
 
-    return best_path, best_cost
+    return meilleur_chemin, meilleur_cout
 
-# Itérations du sous-gradient
 
-history = []  # Historique des valeurs de la fonction duale
+# Méthode du sous-gradient itérative
+historique = []  # Pour stocker l'évolution de la fonction duale
 
-for k in range(max_iter):
-    # Résolution du problème relaxé avec les multiplicateurs actuels
-    path, lag_cost = lagrangian_relaxation(distance_matrix, lambda_vals)
-    history.append(lag_cost)
+# Boucle qui sauvegarde le meillieur chemin courant et son cout dans l'historique, se répète 50 fois
+for iteration_Actuelle in range(max_Iteration):
+    chemin_courant, cout_lagrangien = RelaxationLagrangien(matrice_distances, Val_Lambda)
+    historique.append(cout_lagrangien)
 
-    # Calcul du sous-gradient : on veut que chaque ville soit visitée une seule fois
-    g = np.array([path.count(i) - 1 for i in range(n)])  # 0 si respecté, ≠0 sinon
-
-    # Norme du sous-gradient : si nulle, on arrête
-    norm_g = np.linalg.norm(g)
-    if norm_g == 0:
+    # On place les valeurs du sous-gradient dans une matrice : on veut que chaque ville soit visitée exactement une fois
+    sous_gradient = np.array([chemin_courant.count(i) - 1 for i in range(n)])  
+    
+    # Norme du vecteur sous_gradient qui mesure à quel point les contraintes sont violées.
+    norme_sg = np.linalg.norm(sous_gradient) # Si 0, la solution est faisable, on peut arrêter
+    if norme_sg == 0:
         break
 
-    # Mise à jour des multiplicateurs : λ := λ + pas * sous-gradient
-    step = alpha / (k + 1)  # Pas décroissant
-    lambda_vals = lambda_vals + step * g
+    # Mise à jour des multiplicateurs de Lagrange 
+    pas = taille_pas / (iteration_Actuelle + 1)  # Pas décroissant avec le nombre d'itérationspour précision
+    Val_Lambda = Val_Lambda + pas * sous_gradient # Nouveau lambda, on avance dans la direction du sous gradient multplié par la taille du pas
 
-# Résultat final
+# Affichage du résultat final
+chemin_final = [Liste_ville[i] for i in chemin_courant]
+cout_final = round(historique[-1], 1)
 
-final_path = [city_list[i] for i in path]
-final_cost = round(history[-1], 1)
-
-print("Tournée finale associée :", " → ".join(final_path))
-print("Borne inférieure finale (duale) :", final_cost, "km")
+print("Tournée finale associée :", " → ".join(chemin_final))
+print("Borne inférieure finale (duale) :", cout_final, "km")
