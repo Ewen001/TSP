@@ -1,59 +1,126 @@
-import numpy as np
+import itertools
+import random
+from time import perf_counter
 import matplotlib.pyplot as plt
-from math import factorial
-from itertools import permutations           # Pour générer toutes les permutations possibles
+import numpy as np
 
-Liste_ville = ["Paris", "Lille", "Strasbourg", "Lyon", "Marseille", "Toulouse"]
 
-distance_matrice = np.array([
-    [0, 203.6, 398.5, 391.7, 660.5, 588.0],
-    [203.6, 0, 409.1, 556.9, 833.8, 790.4],
-    [398.5, 409.1, 0, 382.6, 614.9, 736.4],
-    [391.7, 556.9, 382.6, 0, 277.5, 360.3],
-    [660.5, 833.8, 614.9, 277.5, 0, 319.6],
-    [588.0, 790.4, 736.4, 360.3, 319.6, 0]
+def held_karp(dists):
+    """
+    Paramètres :
+        dists : matrice des distances
+
+    Retourne :
+        Un tuple (coût, chemin).
+        coût  : distance totale du chemin optimal
+        chemin : chemin optimal à travers les villes
+    """
+    n = len(dists)
+
+    # Dictionnaire avec comme clé (ensemble_de_ville_visité, ville_courante)
+    # et comme valeur (coût_min, ville_précédente)
+    # Les sous-ensembles sont représentés par des bits à 1.
+    C = {}
+
+    # Initialiser les coûts de transition depuis l’état initial (ville 0)
+    for k in range(1, n):
+        C[(1 << k, k)] = (dists[0][k], 0)
+
+    # Itérer sur les sous-ensembles de taille croissante et stocker les résultats
+    # intermédiaires à la manière classique de la programmation dynamique
+    for taille_ss_ens in range(2, n):
+        for ss_ens in itertools.combinations(range(1, n), taille_ss_ens):
+            # Mettre à 1 les bits correspondant aux villes dans ce sous-ensemble
+            bits = 0
+            for bit in ss_ens:
+                bits |= 1 << bit
+
+            # Trouver le plus petit coût pour atteindre ce sous-ensemble
+            for k in ss_ens:
+                prec = bits & ~(1 << k)  # Sous-ensemble sans le sommet k
+
+                res = []
+                for m in ss_ens:
+                    if m == 0 or m == k:
+                        continue
+                    res.append((C[(prec, m)][0] + dists[m][k], m))
+                C[(bits, k)] = min(res)
+
+    # On considère tous les bits sauf le bit de départ (ville 0)
+    bits = (2**n - 1) - 1
+
+    # Calcul du coût optimal pour revenir à la ville de départ
+    res = []
+    for k in range(1, n):
+        res.append((C[(bits, k)][0] + dists[k][0], k))
+    opt, parent = min(res)
+
+    # Remonter le chemin optimal (backtracking)
+    chemin = []
+    for i in range(n - 1):
+        chemin.append(parent)     # Ajoute la ville actuelle au chemin
+        new_bits = bits & ~(1 << parent)    # On active tout les bits de la ville avant "parent", et on désactive celui de "parent"
+        _, parent = C[(bits, parent)]   # On récupère du tuple uniquement la ville
+        bits = new_bits
+
+    # Ajouter la ville de départ (implicite)
+    chemin.append(0)
+
+    return list(reversed(chemin)), opt
+
+# On génére l'exemple avec des distances entre des villes françaises
+
+matrice_distance = np.array([
+    [0, 203.6, 398.5, 391.7, 660.5, 588.0],     # Paris
+    [203.6, 0, 409.1, 556.9, 833.8, 790.4],     # Lille
+    [398.5, 409.1, 0, 382.6, 614.9, 736.4],     # Strasbourg
+    [391.7, 556.9, 382.6, 0, 277.5, 360.3],     # Lyon
+    [660.5, 833.8, 614.9, 277.5, 0, 319.6],     # Marseille
+    [588.0, 790.4, 736.4, 360.3, 319.6, 0]      # Toulouse
 ])
 
 
-# Algorithme Held-Karp
-def Held_Karp(matrice_des_couts):
-    n = len(matrice_des_couts)           # Nombre de villes
-    Couts_min = float('inf')             # On initialise le coût minimum à l'infini
-    Meilleur_chemin = None               # Pour stocker le meilleur chemin trouvé
+# On charge les résultats de l'algorithme de Held-Karp
+meilleur_chemin, cout_total = held_karp(matrice_distance)
 
-    # On génère toutes les permutations possibles des villes sauf la première (ville de départ fixe)
-    for perm in permutations(range(1, n)):
-        chemin = [0] + list(perm) + [0]                                            # Le chemin commence et se termine à la ville 0 (Paris ici)
-        Cout = sum(matrice_des_couts[chemin[i], chemin[i+1]] for i in range(n))    # On calcule le coût du chemin
-        if Cout < Couts_min:                                                       # Si on trouve un chemin moins cher, on le garde
-            Couts_min = Cout
-            Meilleur_chemin = chemin
-            
-    return Meilleur_chemin, Couts_min         # On retourne le chemin optimal et son coût                   
+# On écrit le chemin de ville en ville avec ke nom des villes
+ville = ["Paris", "Lille", "Strasbourg", "Lyon", "Marseille", "Toulouse"]
+meilleur_chemin_nom = [ville[i] for i in meilleur_chemin]
 
-# Exécution de l’algorithme sur notre matrice exemple
-Meilleur_chemin, Cout_total = Held_Karp(distance_matrice)
-
- On convertit les indices des villes en noms pour l'affichage
-Nouv_Meilleur_chemin = [Liste_ville[i] for i in Meilleur_chemin]
-
-print("Tournée optimale :", " → ".join(Nouv_Meilleur_chemin))
-print("Distance totale :", round(Cout_total, 1), "km")
+# Affichage final du résultat
+print("Tournée optimale :", " → ".join(meilleur_chemin_nom))
+print("Distance totale :", round(cout_total, 1), "km")
 
 
-# Graphique de complexité
-n_values = np.arange(2, 12)  # Nombre de villes de 2 à 11
+# Dans cette section on cherche à illustrer la complexité de l'algorithme
 
-Complexite_Herld_Karp = [n**2 * 2**n for n in n_values]  
-Complexite_factoriel = [factorial(n) for n in n_values]  
+# Cette fonction génére une matrice de distance aléatoire de taille n, symétrique
+def cout_aleatoire(n):
+    dists = [[0] * n for i in range(n)]
+    for i in range(n):
+        for j in range(i+1, n):
+            dists[i][j] = dists[j][i] = random.randint(1, 99)
 
-plt.figure(figsize=(10, 6))
-plt.plot(n_values, Complexite_Herld_Karp, label="Held-Karp (O(n²·2ⁿ))", marker='o', color='blue')
-plt.plot(n_values, Complexite_factoriel, label=" Factoriel (O(n!))", marker='s', color='red')
-plt.yscale('log')  # Échelle logarithmique pour mieux visualiser
-plt.xlabel("Nombre de villes (n)")
-plt.ylabel("Complexité (opérations)")
-plt.title("Comparaison de la complexité algorithmique")
-plt.legend()
-plt.grid(True, linestyle='--', alpha=0.6)
+    return dists
+
+# On créé notre liste des temps d'éxécution, ainsi que les tailles n que l'on souhaite testé
+l_tps = []
+taille = range(4, 15)
+
+for n in taille:
+    dists = cout_aleatoire(n)
+    debut = perf_counter()
+
+    print(held_karp(dists))
+
+    fin = perf_counter()
+    l_tps.append(fin - debut) # Mesure du temps d'éxécution
+
+    print(f"n={n}: {l_tps[-1]:.4f}s")
+
+# Afiichage graphique
+plt.plot(taille, l_tps, 'o-')
+plt.xlabel('Nombre de villes')
+plt.ylabel('Temps (s)')
+plt.title('Complexité de Held-Karp')
 plt.show()
