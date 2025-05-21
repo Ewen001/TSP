@@ -20,20 +20,20 @@ n = len(Liste_ville)  # Nombre de villes
 chemin_valide = [(i, j) for i in range(n) for j in range(n) if i != j]
 
 # Construction du vecteur des coûts associés à chaque chemin valide
-c = [distance_matrice[i][j] for (i, j) in chemin_valide] # c[i] correspond au coût (distance) pour le chemin chemin_valide[i]
+c = [distance_matrice[i][j] for (i, j) in chemin_valide]                 # c[i] correspond au coût (distance) pour le chemin chemin_valide[i]
 
 A_eq = []   # Matrice des contraintes
 b_eq = []   # Vecteur second membre
 
 # Contrainte 1 : chaque ville doit avoir exactement une sortie
 for i in range(n):
-    ligne = [1 if chemin[0] == i else 0 for chemin in chemin_valide] # liste row qui correspond à une ligne et qui vaut 1 si le chemin part de la ville i, sinon 0
-    A_eq.append(ligne) # Ajoute la ligne dans la matrice qui représente les contraintes d'égalité
-    b_eq.append(1) # Ajoute 1 dans le second membre correspondant à la contrainte.
+    ligne = [1 if chemin[0] == i else 0 for chemin in chemin_valide]     # liste row qui correspond à une ligne et qui vaut 1 si le chemin part de la ville i, sinon 0
+    A_eq.append(ligne)                                                   # Ajoute la ligne dans la matrice qui représente les contraintes d'égalité
+    b_eq.append(1)                                                       # Ajoute 1 dans le second membre correspondant à la contrainte.
 
 # Contrainte 2 : chaque ville doit avoir exactement une entrée
 for j in range(n):
-    ligne = [1 if chemin[1] == j else 0 for chemin in chemin_valide] # liste row qui correspond à une ligne et qui vaut 1 si le chemin arrive de la ville j, sinon 0
+    ligne = [1 if chemin[1] == j else 0 for chemin in chemin_valide]     # liste row qui correspond à une ligne et qui vaut 1 si le chemin arrive de la ville j, sinon 0
     A_eq.append(ligne)
     b_eq.append(1)
 
