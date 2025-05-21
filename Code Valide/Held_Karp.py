@@ -44,8 +44,8 @@ print("Distance totale :", round(Cout_total, 1), "km")
 # Graphique de complexité
 n_values = np.arange(2, 12)  # Nombre de villes de 2 à 11
 
-Complexite_Herld_Karp = [n**2 * 2**n for n in n_values]  # O(n²·2ⁿ)
-Complexite_factoriel = [factorial(n) for n in n_values]  # O(n!)
+Complexite_Herld_Karp = [n**2 * 2**n for n in n_values]  
+Complexite_factoriel = [factorial(n) for n in n_values]  
 
 plt.figure(figsize=(10, 6))
 plt.plot(n_values, Complexite_Herld_Karp, label="Held-Karp (O(n²·2ⁿ))", marker='o', color='blue')
