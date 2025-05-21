@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*- ajouter preuve de complexité pour n e [5,20]
 """
 Spyder Editor
 
