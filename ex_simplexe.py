@@ -33,7 +33,7 @@ for i in range(n):
 
 # Contrainte 2 : chaque ville doit avoir exactement une entrée
 for j in range(n):
-    ligne = [1 if arc[1] == j else 0 for chemin in chemin_valide] # liste row qui correspond à une ligne et qui vaut 1 si le chemin arrive de la ville j, sinon 0
+    ligne = [1 if chemin[1] == j else 0 for chemin in chemin_valide] # liste row qui correspond à une ligne et qui vaut 1 si le chemin arrive de la ville j, sinon 0
     A_eq.append(ligne)
     b_eq.append(1)
 
