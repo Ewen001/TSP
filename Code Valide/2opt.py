@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu May 22 17:25:36 2025
+
+@author: Cytech
+
+-mod : gen_tour2 correct Paris 1st ville
+
+"""
+
 import numpy as np
 import random
 import matplotlib.pyplot as plt
@@ -22,6 +32,12 @@ def gen_tour(n):
     indices = list(range(n))          # Crée une liste ordonnée des indices [0, 1, 2, ..., n-1]
     random.shuffle(indices)           # Algorithme standard pour mélanger une liste de manière uniforme (Fisher-Yates, O(n)
     return indices                    # Retourne la liste melangé
+
+def gen_tour2(n):                       #gen une liste ordonnée commencant par Paris
+    indices = list(range(1, n))         # Exclut Paris
+    random.shuffle(indices)             # Mélange les autres villes
+    return [0] + indices                # Ajoute Paris en tête
+
 
 # Fcontion pour calculer la distance parcourue par le tour pris en paramètre
 def distance(tour, matrice):
@@ -114,7 +130,7 @@ def Graphique_tour(parcours, coordonnees):
 
 
 # Exécution
-initial_tour = gen_tour(len(Liste_ville))
+initial_tour = gen_tour2(len(Liste_ville))
 meilleur_chemin, distance_totale = two_opt(distance_matrice, initial_tour)
 
 print(f"Tournée optimale: {[Liste_ville[i] for i in meilleur_chemin]}")
