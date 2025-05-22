@@ -1,13 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu May 22 17:40:02 2025
-
-@author: Cytech
-
-@filename: Lagrangien.py
-
-"""
-
 import numpy as np 
 from scipy.optimize import linear_sum_assignment
 
