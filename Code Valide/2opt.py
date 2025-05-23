@@ -1,18 +1,7 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu May 22 17:25:36 2025
-
-@author: Cytech
-
--mod : gen_tour2 correct Paris 1st ville
-
-"""
-
 import numpy as np
 import random
 import matplotlib.pyplot as plt
 from time import perf_counter # TEST COMPLEXITE
-
 
 # Liste des villes dans le même ordre que dans la matrice
 Liste_ville = ["Paris", "Lille", "Strasbourg", "Lyon", "Marseille", "Toulouse"]
@@ -30,16 +19,16 @@ distance_matrice = np.array([
 # Fonction qui génère une permutation aléatoire des indices de villes de 0 à n-1.
 def gen_tour(n):
     indices = list(range(n))          # Crée une liste ordonnée des indices [0, 1, 2, ..., n-1]
-    random.shuffle(indices)           # Algorithme standard pour mélanger une liste de manière uniforme (Fisher-Yates, O(n)
-    return indices                    # Retourne la liste melangé
+    random.shuffle(indices)           # Algorithme standard pour mélanger une liste de manière uniforme (Fisher-Yates, O(n))
+    return indices                    # Retourne la liste melangée
 
-def gen_tour2(n):                       #gen une liste ordonnée commencant par Paris
+def gen_tour2(n):                       # Crée une liste ordonnée commencant par Paris
     indices = list(range(1, n))         # Exclut Paris
     random.shuffle(indices)             # Mélange les autres villes
     return [0] + indices                # Ajoute Paris en tête
 
 
-# Fcontion pour calculer la distance parcourue par le tour pris en paramètre
+# Fonction pour calculer la distance parcourue par le tour pris en paramètre
 def distance(tour, matrice):
     dist = 0
     n = len(tour)
@@ -53,13 +42,13 @@ def distance(tour, matrice):
 
 
 # Inverse une sous-séquence du tour entre les indices i et k
-def Changement(tour, i, k):
+def changement(tour, i, k):
      
-    Avant_changement = tour[:i]        # Avant la sous-séquence (éléments 0 à i-1)  
+    avant_changement = tour[:i]        # Avant la sous-séquence (éléments 0 à i-1)  
     changement = tour[i:k+1][::-1]     # Inverse la sous-séquence (éléments i à k)
     nouveau = tour[k+1:]               # Après la sous-séquence (éléments k+1 à fin)
    
-    return Avant_changement + changement + nouveau
+    return avant_changement + changement + nouveau
 
 
 # Optimise un tour pour le problème du voyageur de commerce en utilisant l'algorithme 2-opt
@@ -67,85 +56,45 @@ def two_opt(matrice, tour_initial=None, max_iterations = 1000):
    
     n = len(matrice)                                                           # Nombre de villes
     tour = tour_initial.copy() if tour_initial is not None else gen_tour(n)    # Copie du tour initial ou génération aléatoire
-    Meilleur_distance = distance(tour, matrice)                                # Distance initiale
-    Ameliorable = True
+    meilleur_distance = distance(tour, matrice)                                # Distance initiale
+    ameliorable = True
     iterations = 0                                                             # Compteur
 
-    # Tant que c'est améliorable et qu'on a pas atteint le max d'itération
-    while Ameliorable and iterations < max_iterations:
-        Ameliorable = False
+    # Tant que c'est améliorable et qu'on n'a pas atteint le max d'itération
+    while ameliorable and iterations < max_iterations:
+        ameliorable = False
         iterations += 1   # Incrémente le compteur
        
         # Parcourt toutes les paires de villes possibles
         for i in range(1, n - 1):              # La première ville est fixé
             for k in range(i + 1, n):          # k doit être > i                        
                
-                # Évite les Changements inutiles entre villes qui ont la meme distance
+                # Évite les changements inutiles entre villes qui ont la meme distance
                 if k == i + 1:
                     continue
                    
                 # Génère un nouveau tour candidat
-                candidat = Changement(tour, i, k)                  # Applique le 2-opt changement entre i et k
-                distance_candidat = distance(candidat, matrice)    # On regarde s'il est meilleure
+                candidat = changement(tour, i, k)                  # Applique le 2-opt changement entre i et k
+                distance_candidat = distance(candidat, matrice)    # On regarde s'il est meilleur
                
-                # Si il est meilleure, met à jour la meilleure solution
-                if distance_candidat < Meilleur_distance:
+                # S'il est meilleur, met à jour la meilleure solution
+                if distance_candidat < meilleur_distance:
                     tour = candidat
-                    Meilleur_distance = distance_candidat
-                    Ameliorable = True
+                    meilleur_distance = distance_candidat
+                    ameliorable = True
                     break      # Passe à l'itération suivante immédiatement
            
-            if Ameliorable:    # Si amélioration trouvée, on repart du nouveau tour immédiatement
+            if ameliorable:    # Si amélioration trouvée, on repart du nouveau tour immédiatement
                 break
                
-    return tour, Meilleur_distance
-
-
-# Graphique pour visualiser le parcours optimisé avec les villes et leur parcours.
-def Graphique_tour(parcours, coordonnees):
-    """
-    Affiche le parcours optimisé avec une représentation graphique des villes.
-    """
-    # Récupère les coordonnées x (longitude) et y (latitude)
-    x = [coordonnees[i][0] for i in parcours + [parcours[0]]]
-    y = [coordonnees[i][1] for i in parcours + [parcours[0]]]
-
-    plt.figure(figsize=(12, 8))
-    plt.plot(x, y, 'o-', color='royalblue', markersize=8,
-             markerfacecolor='red', linewidth=1.5)
-
-    # Affiche les noms des villes
-    for i in range(len(parcours)):
-        indice_ville = parcours[i]
-        plt.text(coordonnees[indice_ville][0] + 1, coordonnees[indice_ville][1] + 1,
-                 Liste_ville[indice_ville], fontsize=10, bbox=dict(facecolor='white', alpha=0.8))
-
-    plt.title("Parcours optimal entre les villes françaises")
-    plt.xlabel("Longitude")
-    plt.ylabel("Latitude")
-    plt.grid(True)
-    plt.tight_layout()
-    plt.show()
-
-
+    return tour, meilleur_distance
 
 # Exécution
 initial_tour = gen_tour2(len(Liste_ville))
 meilleur_chemin, distance_totale = two_opt(distance_matrice, initial_tour)
 
-print(f"Tournée optimale: {[Liste_ville[i] for i in meilleur_chemin]}")
+print("Tournée optimale:", " → ".join([Liste_ville[i] for i in meilleur_chemin] + [Liste_ville[meilleur_chemin[0]]]))
 print(f"Distance totale: {distance_totale:.2f} km")
-
-coords = [
-    (50, 50),   # Paris
-    (70, 80),   # Lille
-    (90, 60),   # Strasbourg
-    (60, 30),   # Lyon
-    (80, 10),   # Marseille
-    (40, 10)    # Toulouse
-]
-
-Graphique_tour(meilleur_chemin, coords)
 
 # Dans cette section on cherche à illustrer la complexité de l'algorithme
 
