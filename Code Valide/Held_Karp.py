@@ -4,7 +4,6 @@ from time import perf_counter
 import matplotlib.pyplot as plt
 import numpy as np
 
-
 def held_karp(dists):
     """
     Paramètres :
@@ -86,6 +85,7 @@ meilleur_chemin, cout_total = held_karp(matrice_distance)
 # On écrit le chemin de ville en ville avec ke nom des villes
 ville = ["Paris", "Lille", "Strasbourg", "Lyon", "Marseille", "Toulouse"]
 meilleur_chemin_nom = [ville[i] for i in meilleur_chemin]
+meilleur_chemin_nom.append(ville[meilleur_chemin[0]])  # Revenir à la ville de départ
 
 # Affichage final du résultat
 print("Tournée optimale :", " → ".join(meilleur_chemin_nom))
