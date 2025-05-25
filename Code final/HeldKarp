@@ -54,7 +54,7 @@ def held_karp(dists):
         res.append((C[(bits, k)][0] + dists[k][0], k))
     opt, parent = min(res)
 
-    # Remonter le chemin optimal (backtracking)
+    # Remonter le chemin optimal
     chemin = []
     for i in range(n - 1):
         chemin.append(parent)     # Ajoute la ville actuelle au chemin
