@@ -7,11 +7,11 @@ import numpy as np
 def held_karp(dists):
     """
     Paramètres :
-        dists : matrice des distances
+        dists : matrice des couts
 
     Retourne :
         Un tuple (coût, chemin).
-        coût  : distance totale du chemin optimal
+        coût  : cout total du chemin optimal
         chemin : chemin optimal à travers les villes
     """
     n = len(dists)
@@ -58,7 +58,7 @@ def held_karp(dists):
     chemin = []
     for i in range(n - 1):
         chemin.append(parent)     # Ajoute la ville actuelle au chemin
-        new_bits = bits & ~(1 << parent)    # On active tout les bits de la ville avant "parent", et on désactive celui de "parent"
+        new_bits = bits & ~(1 << parent)    # On active tous les bits de la ville avant "parent", et on désactive celui de "parent"
         _, parent = C[(bits, parent)]   # On récupère du tuple uniquement la ville
         bits = new_bits
 
@@ -67,7 +67,7 @@ def held_karp(dists):
 
     return list(reversed(chemin)), opt
 
-# On génére l'exemple avec des distances entre des villes françaises
+# On génére l'exemple avec des couts entre des villes françaises
 
 matrice_distance = np.array([
     [0, 203.6, 398.5, 391.7, 660.5, 588.0],     # Paris
@@ -82,7 +82,7 @@ matrice_distance = np.array([
 # On charge les résultats de l'algorithme de Held-Karp
 meilleur_chemin, cout_total = held_karp(matrice_distance)
 
-# On écrit le chemin de ville en ville avec ke nom des villes
+# On écrit le chemin de ville en ville avec le nom des villes
 ville = ["Paris", "Lille", "Strasbourg", "Lyon", "Marseille", "Toulouse"]
 meilleur_chemin_nom = [ville[i] for i in meilleur_chemin]
 meilleur_chemin_nom.append(ville[meilleur_chemin[0]])  # Revenir à la ville de départ
@@ -94,7 +94,7 @@ print("Distance totale :", round(cout_total, 1), "km")
 
 # Dans cette section on cherche à illustrer la complexité de l'algorithme
 
-# Cette fonction génére une matrice de distance aléatoire de taille n, symétrique
+# Cette fonction génére une matrice de cout aléatoire de taille n, symétrique
 def cout_aleatoire(n):
     dists = [[0] * n for i in range(n)]
     for i in range(n):
