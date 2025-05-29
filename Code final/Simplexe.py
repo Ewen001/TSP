@@ -16,34 +16,41 @@ distance_matrice = np.array([
 
 n = len(Liste_ville)
 
-# Construction de la liste des chemins possibles (i, j) avec i < j 
+# Construction de la liste des chemins possibles (i < j)
 chemin_valide = [(i, j) for i in range(n) for j in range(i + 1, n)]
+m = len(chemin_valide)
 
-# Construction du vecteur des coûts associés à chaque chemin valide
-c = [distance_matrice[i][j] for (i, j) in chemin_valide]    # c[i] correspond au coût (distance) pour le chemin chemin_valide[i]
+# PHASE 1 : Ajout des variables artificielles pour trouver une solution faisable
+A_eq = []
+b_eq = []
 
-A_eq = []   # Matrice des contraintes
-b_eq = []   # Vecteur second membre
+for ville in range(n):
+    ligne = []
+    for (i, j) in chemin_valide:
+        ligne.append(1 if ville == i or ville == j else 0)
+    A_eq.append(ligne)
+    b_eq.append(2)
 
-for ville in range(n):  # Parcourt chaque ville
-    ligne = []  # Initialisation d'une ville vide (correspond aux coeff de la contrainte)
-    for (i, j) in chemin_valide:    # Parcourt tous les chemins non orientés
-        if ville == i or ville == j:    # Vérifie s'il y a un lien entre cette ville et une autre
-            ligne.append(1) # Si oui on ajoute une contrainte à 1 pour dire que cette ville est ok
-        else:
-            ligne.append(0) # Si non on ajoute une contrainte à 0 pour dire que cette ville n'est pas concernée
-    A_eq.append(ligne)  # On ajoute cette ligne à la matrice des contraintes
-    b_eq.append(2)  # On ajoute le 2nd membre (chaque ville à 2 contraintes)
+# Étend A_eq avec des variables artificielles (une par contrainte)
+A_eq_phase1 = [row + [1 if i == j else 0 for j in range(n)] for i, row in enumerate(A_eq)]
+c_phase1 = [0] * m + [1] * n  # objectif : minimiser la somme des variables artificielles
+borne_phase1 = [(0, 1)] * m + [(0, None)] * n  # bornes des x_ij et des variables artificielles
 
-# Borne de x_ij ∈ [0, 1] (relaxation continue, donc pas binaire)
-borne = [(0, 1) for _ in chemin_valide]
+res_phase1 = linprog(c=c_phase1, A_eq=A_eq_phase1, b_eq=b_eq, bounds=borne_phase1, method="highs")
 
-# On utilise la méthode 'highs' (plus rapide et robuste)
-res = linprog(c=c, A_eq=A_eq, b_eq=b_eq, bounds=borne, method="highs")
+# PHASE 2 : Résolution du problème original si faisable
+if res_phase1.success and res_phase1.fun < 1e-5:
+    # Construire le vrai problème avec les bonnes bornes et fonction objectif
+    c_phase2 = [distance_matrice[i][j] for (i, j) in chemin_valide]
+    A_eq_phase2 = A_eq
+    bounds_phase2 = [(0, 1)] * m
 
-# Affichage des résultats
-if res.success:
-    print("Résolution simplexe réussie (relaxation linéaire)")
-    print("Borne inférieure du TSP :", round(res.fun, 1), "km")
+    res_phase2 = linprog(c=c_phase2, A_eq=A_eq_phase2, b_eq=b_eq, bounds=bounds_phase2, method="highs")
+
+    if res_phase2.success:
+        print("Résolution réussie avec la méthode des 2 phases.")
+        print("Borne inférieure du TSP :", round(res_phase2.fun, 1), "km")
+    else:
+        print("Phase 2 : Échec de la résolution -", res_phase2.message)
 else:
-    print("Échec de la résolution :", res.message)
+    print("Phase 1 : Aucune solution réalisable trouvée (système infaisable).")
