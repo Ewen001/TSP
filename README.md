@@ -9,7 +9,7 @@ Méthodes implémentées :
 - `Lagrangien.py` : Fournit une borne inférieure du TSP via une résolution du problème d'affectation.
 - `SousGradient.py` : Approche itérative corrigeant les sous-tours pour approcher une solution admissible.
 
-Données utilisées : Toutes les méthodes utilisent la même*matrice de distances entre : Paris, Lille, Strasbourg, Lyon, Marseille, Toulouse
+Données utilisées : Toutes les méthodes utilisent la même matrice de distances entre : Paris, Lille, Strasbourg, Lyon, Marseille, Toulouse
 
 Exécution en console :
 ```bash
